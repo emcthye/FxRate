@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".currencyList.CurrencyListActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:textStyle="italic"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:paddingRight="32dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:id="@+id/tvLastUpdated"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/tvLastUpdated">
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/srCurrencyList"
+            android:visibility="visible"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="never"
+                android:id="@+id/rvCurrencyList"/>
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+
+        <include layout="@layout/view_empty"/>
+
+        <include layout="@layout/view_retry"/>
+
+        <include layout="@layout/view_loading" android:visibility="invisible"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>
