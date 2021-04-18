@@ -1,5 +1,7 @@
 # FxRate - VIPER + Dagger2 + RxJava2 + Mockito &amp; Espresso + Retrofit &amp; Moshi
 
+![](screenshot.png)
+
 This is a demo app showing daily updated foreign exchange reference rates from the European Central Bank. The purpose of this demo app is to demonstrate Android Java application in VIPER clean architecture. The source code is organized into different layers of VIPER architecture and each layer of VIPER architecture are described below:
 
 ![](VIPER-Architecture.png)
