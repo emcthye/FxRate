@@ -3,10 +3,13 @@ package io.github.emcthye.fxrate.entity.local;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.MediumTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -28,6 +31,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(AndroidJUnit4.class)
+@MediumTest
 public class CurrencyLocalDataSourceTest {
 
     private CurrencyLocalDataSource local;

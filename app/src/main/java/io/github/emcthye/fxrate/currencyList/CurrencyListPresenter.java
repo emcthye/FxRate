@@ -83,6 +83,13 @@ public class CurrencyListPresenter implements CurrencyListContract.Presenter {
     }
 
     @Override
+    public void destroy() {
+        currencyListView = null;
+        getCurrencyListUseCase.dispose();
+        getLastUpdatedUseCase.dispose();
+    }
+
+    @Override
     public void resume() {
 
     }
@@ -90,13 +97,6 @@ public class CurrencyListPresenter implements CurrencyListContract.Presenter {
     @Override
     public void pause() {
 
-    }
-
-    @Override
-    public void destroy() {
-        currencyListView = null;
-        getCurrencyListUseCase.dispose();
-        getLastUpdatedUseCase.dispose();
     }
 
     @Override
