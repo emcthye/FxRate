@@ -19,7 +19,7 @@ This is a demo app showing daily updated foreign exchange reference rates from t
 
 ## Dependency Injection - Dagger2
 
-The project is organized into different layers according to VIPER architecture and dependency injection is used to provide the required components between the layers. Dagger2 is the dependency injection framework used in this project and the following code shows initialization process of Dagger component used to inject dependencies later on:
+The project is organized into different layers according to VIPER architecture and dependency injection is used to provide the required components across the layers. Dagger2 is the dependency injection framework used in this project and the following code shows the initialization process of Dagger component used to inject dependencies later on:
 
 ```java
 
