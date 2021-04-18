@@ -2,12 +2,12 @@
 
 ![](screenshot.png)
 
-1. VIPER Architecture
-*[View](#view)
-*[Interactor](#interactor)
-*[Presenter](#presenter)
-*[Entity](#entity)
-*[Router](#router)
+1. VIPER Architecture 
+  - [View](#view)
+  - [Interactor](#interactor)
+  - [Presenter](#presenter)
+  - [Entity](#entity)
+  - [Router](#router)
 2. [Data Layer](#data-layer)
 3. [Testing](#testing)
 4. [Package Structure](#package-structure)
