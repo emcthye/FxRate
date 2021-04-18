@@ -2,7 +2,7 @@
 
 ![](screenshot.png)
 
-VIPER + Dagger2 + RxJava2 + Mockito &amp; Espresso + Retrofit &amp; Moshi
+## VIPER + Dagger2 + RxJava2 + Mockito &amp; Espresso + Retrofit &amp; Moshi
  
 - VIPER Architecture: 
   - [View ](#view)
@@ -19,7 +19,7 @@ This is a demo app showing daily updated foreign exchange reference rates from t
 
 ![](VIPER-Architecture.png)
 
-## **View**
+## View
 `View` is an interface that contains method to display data it gets from presenter.
 
 ```java
