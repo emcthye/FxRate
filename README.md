@@ -1313,7 +1313,7 @@ provides it to the presentation layer.
 
 
 # References
-Exchange Rate REST API - Currency data API that tracks exchange rates by European Central Bank - https://www.frankfurter.app  
-MPAndroidChart - Draw trend graph from historical exchange rates data - https://github.com/PhilJay/MPAndroidChart  
-ButterKnife - Bind Android views to fields - Inject https://github.com/JakeWharton/butterknife  
-LeakCanary - Detect memory leaks without IDE - https://github.com/square/leakcanary  
+[Exchange Rate REST API](https://www.frankfurter.app) - Currency data API that tracks exchange rates by European Central Bank  
+[MPAndroidChart](https://github.com/PhilJay/MPAndroidChart) - Draw trend graph from historical exchange rates data  
+[ButterKnife](https://github.com/JakeWharton/butterknife) - Bind Android views to fields  
+[LeakCanary](https://github.com/square/leakcanary) - Detect memory leaks without IDE  
