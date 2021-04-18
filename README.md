@@ -3,18 +3,119 @@
 ![](screenshot.png)
 
 ## VIPER + Dagger2 + RxJava2 + Mockito &amp; Espresso + Retrofit &amp; Moshi
- 
-- VIPER Architecture: 
-  - [View ](#view)
-  - [Interactor ](#interactor)
+- [Dependency Injection - Dagger2](#dependency-injection---dagger2)
+- [Architecture - VIPER](#viper-architecture): 
+  - [View](#view)
+  - [Interactor](#interactor)
   - [Presenter](#presenter)
   - [Entity](#entity)
   - [Router](#router)
-- [Data Layer](#data-layer)
-- [Testing](#testing)
+- [Data Layer - Repository Pattern](#data-layer---repository-pattern)
+- [Testing - Mockito &amp; Espresso](#testing---mockito--espresso)
 - [Package Structure](#package-structure)
 - [References](#references)
 
+## Dependency Injection - Dagger2
+
+The project is organized into different layers according to VIPER architecture and dependency injection is used to provide the required components between the layers. Dagger2 is the dependency injection framework used in this project and the following code shows initialization process of Dagger component used to inject dependencies later on:
+
+```java
+
+@Module
+public class NetworkModule {
+
+    @Provides
+    @Singleton
+    Retrofit provideRetrofit() {
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(logging)
+                .build();
+
+        return new Retrofit.Builder()
+                .baseUrl(CurrencyAPI.CURRENCY_API_URL)
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addConverterFactory(MoshiConverterFactory.create())
+                .client(client)
+                .build();
+    }
+
+    @Provides
+    @Singleton
+    CurrencyAPI provideCurrencyAPI(Retrofit retrofit) {
+        return retrofit.create(CurrencyAPI.class);
+    }
+}
+```
+### Retrofit &amp; Moshi
+
+Why would you use Moshi over Gson? Method count wise, Gson has ~1036 methods which are almost twice as Moshi (~500)! Footprint wise, Gson adds ~300kB to your APK size compared to ~120kB! Moshi is [faster](https://zacsweers.github.io/json-serialization-benchmarking/) and uses less memory. This is due to its usage of Okio low level feature which compare the next bytes of the stream to expected JSON object key names or values instead of allocate memory every time a key name is encountered in the stream. Retrofit is also using Okio under the hood, So guess what happens? The JSON serialization library(Moshi) and networking library(Retrofit) are [sharing the buffer (Okio.BufferedSource) they're using](https://github.com/square/retrofit/blob/master/retrofit-converters/moshi/src/main/java/retrofit2/converter/moshi/MoshiResponseBodyConverter.java#L35-L45) which leads to much lower memory consumption while making network calls and serializing the response!
+
+```java
+@Module
+public class ApplicationModule {
+
+    private final AndroidApplication application;
+
+    public ApplicationModule(AndroidApplication application) {
+        this.application = application;
+    }
+
+    @Provides
+    @Singleton
+    Context provideApplicationContext() {
+        return this.application;
+    }
+
+    @Provides
+    @Singleton
+    UIThread provideUIThread(UIThreadImpl uiThread) {
+        return uiThread;
+    }
+
+    @Provides
+    @Singleton
+    ThreadExecutor provideExecutorThread(ThreadExecutorImpl threadExecutor) {
+        return threadExecutor;
+    }
+}
+
+@Singleton // Constraints this component to one-per-application or unscoped bindings.
+@Component(modules = {ApplicationModule.class, NetworkModule.class})
+public interface ApplicationComponent {
+  void inject(CurrencyListActivity baseActivity);
+  void inject(CurrencyTimelineActivity baseActivity);
+
+  //Exposed to sub-graphs.
+  Context context();
+}
+
+public class AndroidApplication extends Application {
+
+    protected ApplicationComponent applicationComponent;
+
+    @Override public void onCreate() {
+        super.onCreate();
+        this.initializeInjector();
+    }
+
+    protected void initializeInjector() {
+        this.applicationComponent = DaggerApplicationComponent.builder()
+                .applicationModule(new ApplicationModule(this))
+                .build();
+    }
+
+    public ApplicationComponent getApplicationComponent() {
+        return this.applicationComponent;
+    }
+}
+
+```
+
+## VIPER Architecture
 This is a demo app showing daily updated foreign exchange reference rates from the European Central Bank. The purpose of this demo app is to demonstrate Android Java application in VIPER clean architecture. The source code is organized into different layers of VIPER architecture and each layer of VIPER architecture are described below:
 
 ![](VIPER-Architecture.png)
@@ -347,8 +448,8 @@ public class Router implements CurrencyListContract.Router {
 }
 ```
 
-# Data Layer
-`CurrencyRepository` used the repository pattern to provide all exchange rate data. It contains data stores which provide data either from in memory reference, local file cache or REST API.
+# Data Layer - Repository Pattern
+`CurrencyRepository` used the repository pattern to provide all exchange rate data. It contains data stores which provide data either from in memory reference, local file cache or REST API. In using the Repository design pattern, you can hide the details of how the data is eventually stored or retrieved to and from the data store. This data store can be a database, a JSON file, memory cahce, REST API, etc. 
 
 ## Data Store
 Generic data store for exchange rate.
@@ -637,8 +738,177 @@ public class CurrencyModelMapper {
 }
 ```
 
-# Testing
-With this approach, domain code tested with unit tests without Android dependencies. This can be extended with integration tests, that cover from Interactor to the boundaries of View and repository. This project contains unit test cases of different layers. Following are some examples of test cases:
+# Testing - Mockito &amp; Espresso
+
+With the use of VIPER architecture, only View layer is coupled with dependencies from Android framework which requires more setup & longer test exceution time. All other layers can be tested with a much shorter time. This project contains unit test cases of different layers. Following are some examples of test cases:
+
+### Instrumented Test - Espresso Setup
+```java
+
+android {
+    ...
+    defaultConfig {
+        ...
+        testInstrumentationRunner "io.github.emcthye.fxrate.di.CustomAppTestRunner"
+    }
+}
+
+public class CustomAppTestRunner extends AndroidJUnitRunner {
+
+    @Override
+    public Application newApplication(
+            ClassLoader cl, String className, Context context)
+            throws InstantiationException,
+            IllegalAccessException,
+            ClassNotFoundException {
+        return super.newApplication(
+                cl, FakeAndroidApplication.class.getName(), context);
+    }
+}
+
+public class FakeAndroidApplication extends AndroidApplication {
+
+    @Override
+    protected void initializeInjector() {
+        this.applicationComponent = DaggerTestApplicationComponent.builder()
+                .fakeApplicationModule(new FakeApplicationModule(this))
+                .build();
+    }
+}
+
+@Module
+public class FakeApplicationModule {
+
+    private final FakeAndroidApplication application;
+
+    public FakeApplicationModule(FakeAndroidApplication application) {
+        this.application = application;
+    }
+
+    @Provides
+    @Singleton
+    Context provideApplicationContext() {
+        return this.application;
+    }
+
+    @Provides
+    @Singleton
+    UIThread provideUIThread(UIThreadImpl uiThread) {
+        return Mockito.mock(UIThread.class);
+    }
+
+    @Provides
+    @Singleton
+    ThreadExecutor provideExecutorThread(ThreadExecutorImpl threadExecutor) {
+        return Mockito.mock(ThreadExecutor.class);
+    }
+
+    @Provides
+    CurrencyListPresenter providePresenter() {
+        return Mockito.mock(CurrencyListPresenter.class);
+    }
+}
+
+@Singleton
+@Component(modules = {FakeApplicationModule.class, FakeNetworkModule.class})
+public interface TestApplicationComponent extends ApplicationComponent {
+    void inject(CurrencyListActivity currencyListActivity);
+    void inject(CurrencyListActivityTest currencyListActivityTest);
+}
+
+```
+
+## View
+
+```java
+@RunWith(AndroidJUnit4.class)
+@MediumTest
+public class CurrencyListActivityTest {
+
+    @Rule
+    public ActivityScenarioRule<CurrencyListActivity> activityScenarioRule =
+            new ActivityScenarioRule<>(CurrencyListActivity.class);
+
+    @Test
+    public void render() {
+
+        CurrencyEntity obj = new CurrencyEntity();
+        List<Pair<String,String>> rate = new ArrayList<>();
+        rate.add(new Pair<>("USD", "1-0.25"));
+        obj.rates = rate;
+
+        activityScenarioRule.getScenario().onActivity(activity -> activity.render(obj));
+
+        onView(withId(R.id.rvCurrencyList)).perform(
+                RecyclerViewActions.scrollTo(hasDescendant(
+                        withText(containsString("USD")))));
+
+        onView(withId(R.id.rvCurrencyList)).check(matches(hasChildCount(1)));
+
+        Intents.init();
+        onView(withId(R.id.rvCurrencyList)).perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+        intended(allOf(hasComponent(CurrencyTimelineActivity.class.getName())));
+        Intents.release();
+    }
+
+    @Test
+    public void onResume() {
+        activityScenarioRule.getScenario().moveToState(Lifecycle.State.RESUMED);
+        activityScenarioRule.getScenario().onActivity(activity ->
+                verify(activity.presenter).start());
+    }
+
+    @Test
+    public void renderLoading() {
+
+        activityScenarioRule.getScenario().onActivity(CurrencyListActivity::renderLoading);
+
+        onView(withId(R.id.rlEmptyView)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.rvCurrencyList)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.rlLoadingView)).check(matches(isDisplayed()));
+        onView(withId(R.id.rlErrorView)).check(matches(not(isDisplayed())));
+    }
+
+    @Test
+    public void renderEmpty() {
+
+        activityScenarioRule.getScenario().onActivity(CurrencyListActivity::renderEmpty);
+
+        onView(withId(R.id.rlEmptyView)).check(matches(isDisplayed()));
+        onView(withId(R.id.rvCurrencyList)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.rlLoadingView)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.rlErrorView)).check(matches(not(isDisplayed())));
+    }
+
+    @Test
+    public void renderError() {
+
+        activityScenarioRule.getScenario().onActivity(CurrencyListActivity::renderError);
+
+        onView(withId(R.id.rlErrorView)).check(matches(isDisplayed()));
+        onView(withId(R.id.rvCurrencyList)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.rlLoadingView)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.rlEmptyView)).check(matches(not(isDisplayed())));
+    }
+
+    @Test
+    public void errorRetryClicked() {
+
+        activityScenarioRule.getScenario().onActivity(CurrencyListActivity::renderError);
+        onView(withId(R.id.btnErrorRetry)).perform(click());
+
+        activityScenarioRule.getScenario().onActivity(activity ->
+                verify(activity.presenter).refreshList());
+    }
+
+    @Test
+    public void setLastUpdate() {
+        activityScenarioRule.getScenario().onActivity(activity -> activity.setLastUpdate("33s ago"));
+        onView(withId(R.id.tvLastUpdated)).check(matches(withText("Last Updated " + "33s ago")));
+    }
+}
+```
+
 ## Remote Data Store
 ```java
 @RunWith(MockitoJUnitRunner.class)
@@ -1027,97 +1297,6 @@ public class CurrencyListPresenterTest {
         verify(getCurrencyList).dispose();
         verify(getLastUpdated).dispose();
         assertNull(presenter.currencyListView);
-    }
-}
-```
-
-## View
-
-```java
-@RunWith(AndroidJUnit4.class)
-@MediumTest
-public class CurrencyListActivityTest {
-
-    @Rule
-    public ActivityScenarioRule<CurrencyListActivity> activityScenarioRule =
-            new ActivityScenarioRule<>(CurrencyListActivity.class);
-
-    @Test
-    public void render() {
-
-        CurrencyEntity obj = new CurrencyEntity();
-        List<Pair<String,String>> rate = new ArrayList<>();
-        rate.add(new Pair<>("USD", "1-0.25"));
-        obj.rates = rate;
-
-        activityScenarioRule.getScenario().onActivity(activity -> activity.render(obj));
-
-        onView(withId(R.id.rvCurrencyList)).perform(
-                RecyclerViewActions.scrollTo(hasDescendant(
-                        withText(containsString("USD")))));
-
-        onView(withId(R.id.rvCurrencyList)).check(matches(hasChildCount(1)));
-
-        Intents.init();
-        onView(withId(R.id.rvCurrencyList)).perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
-        intended(allOf(hasComponent(CurrencyTimelineActivity.class.getName())));
-        Intents.release();
-    }
-
-    @Test
-    public void onResume() {
-        activityScenarioRule.getScenario().moveToState(Lifecycle.State.RESUMED);
-        activityScenarioRule.getScenario().onActivity(activity ->
-                verify(activity.presenter).start());
-    }
-
-    @Test
-    public void renderLoading() {
-
-        activityScenarioRule.getScenario().onActivity(CurrencyListActivity::renderLoading);
-
-        onView(withId(R.id.rlEmptyView)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.rvCurrencyList)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.rlLoadingView)).check(matches(isDisplayed()));
-        onView(withId(R.id.rlErrorView)).check(matches(not(isDisplayed())));
-    }
-
-    @Test
-    public void renderEmpty() {
-
-        activityScenarioRule.getScenario().onActivity(CurrencyListActivity::renderEmpty);
-
-        onView(withId(R.id.rlEmptyView)).check(matches(isDisplayed()));
-        onView(withId(R.id.rvCurrencyList)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.rlLoadingView)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.rlErrorView)).check(matches(not(isDisplayed())));
-    }
-
-    @Test
-    public void renderError() {
-
-        activityScenarioRule.getScenario().onActivity(CurrencyListActivity::renderError);
-
-        onView(withId(R.id.rlErrorView)).check(matches(isDisplayed()));
-        onView(withId(R.id.rvCurrencyList)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.rlLoadingView)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.rlEmptyView)).check(matches(not(isDisplayed())));
-    }
-
-    @Test
-    public void errorRetryClicked() {
-
-        activityScenarioRule.getScenario().onActivity(CurrencyListActivity::renderError);
-        onView(withId(R.id.btnErrorRetry)).perform(click());
-
-        activityScenarioRule.getScenario().onActivity(activity ->
-                verify(activity.presenter).refreshList());
-    }
-
-    @Test
-    public void setLastUpdate() {
-        activityScenarioRule.getScenario().onActivity(activity -> activity.setLastUpdate("33s ago"));
-        onView(withId(R.id.tvLastUpdated)).check(matches(withText("Last Updated " + "33s ago")));
     }
 }
 ```
