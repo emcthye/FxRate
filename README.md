@@ -1,7 +1,9 @@
-# FxRate - VIPER + Dagger2 + RxJava2 + Mockito &amp; Espresso + Retrofit &amp; Moshi
+# FxRate
 
 ![](screenshot.png)
 
+VIPER + Dagger2 + RxJava2 + Mockito &amp; Espresso + Retrofit &amp; Moshi
+ 
 - VIPER Architecture: 
   - [View ](#view)
   - [Interactor ](#interactor)
