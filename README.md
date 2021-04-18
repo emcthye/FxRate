@@ -2,16 +2,16 @@
 
 ![](screenshot.png)
 
-1. VIPER Architecture 
-  - [View](#view)
-  - [Interactor](#interactor)
+- VIPER Architecture: 
+  - [View ](#view)
+  - [Interactor ](#interactor)
   - [Presenter](#presenter)
   - [Entity](#entity)
   - [Router](#router)
-2. [Data Layer](#data-layer)
-3. [Testing](#testing)
-4. [Package Structure](#package-structure)
-5. [References](#references)
+- [Data Layer](#data-layer)
+- [Testing](#testing)
+- [Package Structure](#package-structure)
+- [References](#references)
 
 This is a demo app showing daily updated foreign exchange reference rates from the European Central Bank. The purpose of this demo app is to demonstrate Android Java application in VIPER clean architecture. The source code is organized into different layers of VIPER architecture and each layer of VIPER architecture are described below:
 
