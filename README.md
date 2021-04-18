@@ -3,6 +3,8 @@
 ![](screenshot.png)
 
 ## VIPER + Dagger2 + RxJava2 + Mockito &amp; Espresso + Retrofit &amp; Moshi
+This is a demo app showing daily updated foreign exchange reference rates from the European Central Bank. The purpose of this demo app is to demonstrate Android Java application in VIPER clean architecture. 
+
 - [Dependency Injection - Dagger2](#dependency-injection---dagger2)
 - [Architecture - VIPER](#viper-architecture): 
   - [View](#view)
@@ -116,7 +118,7 @@ public class AndroidApplication extends Application {
 ```
 
 ## VIPER Architecture
-This is a demo app showing daily updated foreign exchange reference rates from the European Central Bank. The purpose of this demo app is to demonstrate Android Java application in VIPER clean architecture. The source code is organized into different layers of VIPER architecture and each layer of VIPER architecture are described below:
+The source code is organized into different layers of VIPER architecture and relationship between each layer is described as below:
 
 ![](VIPER-Architecture.png)
 
