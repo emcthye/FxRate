@@ -2,6 +2,17 @@
 
 ![](screenshot.png)
 
+1. VIPER Architecture
+*[View](#view)
+*[Interactor](#interactor)
+*[Presenter](#presenter)
+*[Entity](#entity)
+*[Router](#router)
+2. [Data Layer](#data-layer)
+3. [Testing](#testing)
+4. [Package Structure](#package-structure)
+5. [References](#references)
+
 This is a demo app showing daily updated foreign exchange reference rates from the European Central Bank. The purpose of this demo app is to demonstrate Android Java application in VIPER clean architecture. The source code is organized into different layers of VIPER architecture and each layer of VIPER architecture are described below:
 
 ![](VIPER-Architecture.png)
@@ -337,6 +348,19 @@ public class Router implements CurrencyListContract.Router {
 # Data Layer
 `CurrencyRepository` used the repository pattern to provide all exchange rate data. It contains data stores which provide data either from in memory reference, local file cache or REST API.
 
+## Data Store
+Generic data store for exchange rate.
+```java
+public interface CurrencyDataSource {
+
+    Observable<CurrencyModelAPI> getRateList(String startDate, String baseCurrency);
+
+    void saveRateList(CurrencyModelAPI rateList);
+
+    Observable<String> getLastUpdated();
+}
+```
+Here you can check if data is present in local file cache or fetch data from remote data store. Interactor doesn't know where data is coming.
 ```java
 @Singleton
 public class CurrencyRepository implements CurrencyDataSource {
@@ -422,22 +446,6 @@ public class CurrencyRepository implements CurrencyDataSource {
     }
 }
 ```
-Here you can check if data is present in local file cache or fetch data from remote data store. Interactor doesn't know where data is coming.
-
-
-## Data Store
-Generic data store for exchange rate.
-```java
-public interface CurrencyDataSource {
-
-    Observable<CurrencyModelAPI> getRateList(String startDate, String baseCurrency);
-
-    void saveRateList(CurrencyModelAPI rateList);
-
-    Observable<String> getLastUpdated();
-}
-```
-
 Remote data store which implements `CurrencyDataSource` and fetches exchange rate by making REST calls.
 
 ```java
